@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://calculator-lab.github.io/acc-fov-calculator/sitemap.xml
