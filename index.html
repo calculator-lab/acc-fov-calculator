@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACC FOV Calculator (2026) | Assetto Corsa Competizione Perfect hFOV</title>
+<meta name="description" content="Calculate the perfect horizontal FOV for Assetto Corsa Competizione (ACC). Optimize your single, triple, and ultrawide sim racing setups with accurate bezel math.">
+<meta name="keywords" content="acc fov calculator, assetto corsa competizione fov, sim racing fov calculator acc, acc triple screen setup, acc horizontal fov">
+<link rel="canonical" href="https://your-github-username.github.io/acc-fov-calculator.html">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ACC FOV Calculator PRO",
+  "operatingSystem": "Web",
+  "applicationCategory": "UtilitiesApplication",
+  "description": "An advanced hFOV calculator tailored for Assetto Corsa Competizione, featuring Unreal Engine 4 triple screen projection and ultrawide curve correction.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "Why is ACC FOV different from Assetto Corsa?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Assetto Corsa Competizione uses horizontal FOV (hFOV), unlike the original Assetto Corsa which uses vertical FOV (vFOV). Using a vFOV number in ACC will result in a severely zoomed-in view."
+    }
+  }, {
+    "@type": "Question",
+    "name": "How do I set up a Samsung Odyssey G9 for ACC?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "ACC treats the G9 as a single ultrawide screen. Set the calculator to Single monitor, 32:9 aspect ratio, and 1000R curve. The resulting hFOV (typically around 101-104 degrees) should be entered in the ACC View Settings."
+    }
+  }]
+}
+</script>
+
+<style>
+:root{
+  --bg:#03070e;
+  --bg2:#080f1a;
+  --panel:#0c1421cc;
+  --panel-solid:#0e1726;
+  --line:#1a263a;
+  --text:#d9e6f2;
+  --muted:#7e8da6;
+  --accent:#00aaff;
+  --accent2:#00e6ff;
+  --ok:#22c55e;
+  --warn:#f59e0b;
+  --bad:#ef4444;
+  --glow:0 0 20px rgba(0,170,255,.25);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:Inter,system-ui,-apple-system,sans-serif;
+  background: radial-gradient(1200px 800px at 70% -10%, #0a1a2e 0%, transparent 60%), radial-gradient(900px 600px at -10% 20%, #071324 0%, transparent 50%), var(--bg);
+  color:var(--text); overflow-x:hidden;
+}
+.bg-grid{
+  position:fixed; inset:0; z-index:-1; opacity:.4;
+  background-image:linear-gradient(transparent 95%, #0f2a44 95%), linear-gradient(90deg, transparent 95%, #0f2a44 95%);
+  background-size:40px 40px; mask: radial-gradient(ellipse at center, black 40%, transparent 70%);
+}
+header{
+  position:sticky; top:0; z-index:50; backdrop-filter: blur(10px);
+  background:linear-gradient(180deg, rgba(3,7,14,.9), rgba(3,7,14,.6));
+  border-bottom:1px solid var(--line);
+}
+.nav{
+  max-width:1300px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:16px;
+}
+.logo{
+  display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.5px;
+}
+.logo-badge{
+  width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg, var(--accent), var(--accent2));
+  display:grid; place-items:center; color:#00121f; font-weight:900; box-shadow:var(--glow);
+}
+.logo span{font-size:18px}
+.badge{
+  margin-left:auto; display:flex; gap:8px; align-items:center; color:var(--muted); font-size:12px;
+}
+.badge .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+
+/* GAME NAVIGATION MENU */
+.game-nav-wrapper {
+  background: var(--panel-solid);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 63px;
+  z-index: 40;
+}
+.game-nav {
+  max-width: 1300px; margin: 0 auto; padding: 12px 20px;
+  display: flex; gap: 10px; overflow-x: auto;
+  scrollbar-width: thin; scrollbar-color: #1b2a42 transparent;
+}
+.game-nav::-webkit-scrollbar { height: 4px; }
+.game-nav::-webkit-scrollbar-thumb { background: #1b2a42; border-radius: 4px; }
+.nav-pill {
+  white-space: nowrap; padding: 6px 14px; border-radius: 20px;
+  font-size: 13px; color: #a8b9d3; text-decoration: none;
+  border: 1px solid #1b2a42; background: #0a1220; transition: 0.2s;
+}
+.nav-pill:hover { border-color: var(--accent); color: #e6f3ff; }
+.nav-pill.active { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #00121f; font-weight: 700; border-color: transparent; box-shadow: var(--glow); }
+
+.container{max-width:1300px;margin:24px auto;padding:0 20px}
+.app-grid{display:grid;grid-template-columns:420px 1fr;gap:20px}
+@media (max-width:1020px){.app-grid{grid-template-columns:1fr}}
+.panel{
+  background:var(--panel); border:1px solid var(--line); border-radius:18px; box-shadow:0 10px 40px rgba(0,0,0,.35);
+  overflow:hidden; margin-bottom: 20px;
+}
+.panel-header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:linear-gradient(180deg, rgba(255,255,255,.03), transparent)}
+.panel-header h2{margin:0;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:#9fb3cc}
+.panel-body{padding:18px}
+.section{margin-bottom:18px;padding-bottom:18px;border-bottom:1px dashed #172339}
+.section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:14px}
+.label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#a8b9d3;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.input, select{
+  width:100%; padding:11px 12px; background:#0a1220; color:var(--text); border:1px solid #1b2a42; border-radius:12px;
+  outline:none; transition:.2s; font-size:14px;
+}
+.input:focus, select:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,170,255,.15)}
+.with-unit{display:flex;gap:8px}
+.unit-toggle{padding:0 10px;border:1px solid #1b2a42;background:#0a1220;color:#9fb3cc;border-radius:10px;cursor:pointer;font-size:12px}
+.unit-toggle.active{border-color:var(--accent); color:var(--accent); box-shadow:var(--glow)}
+.slider{width:100%; accent-color:var(--accent)}
+.seg{display:flex;background:#0a1220;border:1px solid #1b2a42;border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;padding:9px 10px;background:transparent;border:0;color:#9fb3cc;border-radius:8px;cursor:pointer;font-weight:600;letter-spacing:.02em}
+.seg button.active{background:linear-gradient(180deg,#11253d,#0f2136);color:#e6f3ff;border:1px solid #1e3a5f;box-shadow:inset 0 0 0 1px rgba(0,170,255,.15), var(--glow)}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.preset-bar{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 10px;border:1px solid #1b2a42;background:#0a1220;border-radius:999px;font-size:12px;color:#b8c7dc;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:#e6f3ff}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  padding:10px 14px;border-radius:12px;border:1px solid #1b2a42;background:#0e1a2b;color:#d6e6f7;cursor:pointer;font-weight:600;letter-spacing:.02em;
+  transition:.2s; display:inline-flex;align-items:center;gap:8px;
+}
+.btn:hover{border-color:var(--accent);box-shadow:var(--glow);transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(180deg,#0f2e4f,#0b2440);border-color:#1e4976;color:#e6f7ff}
+.canvas-wrap{position:relative; background:radial-gradient(600px 300px at 50% 0%, rgba(0,170,255,.08), transparent), #070d16; border-bottom:1px solid var(--line)}
+canvas{width:100%;height:380px;display:block}
+.canvas-overlay{position:absolute;left:12px;top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:6px 9px;background:rgba(5,12,22,.7);border:1px solid #163151;border-radius:999px;font-size:11px;color:#9fb3cc;backdrop-filter:blur(6px)}
+.results{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px}
+@media (max-width:720px){.results{grid-template-columns:repeat(2,1fr)}}
+.stat{
+  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  border:1px solid #17263c; border-radius:14px; padding:14px; position:relative; overflow:hidden;
+}
+.stat h3{margin:0 0 6px 0;font-size:11px;color:#8aa0bd;text-transform:uppercase;letter-spacing:.1em}
+.stat .value{font-size:28px;font-weight:800;letter-spacing:.02em}
+.stat .sub{font-size:12px;color:#8aa0bd;margin-top:4px}
+.stat.accent{border-color:#1a456b;box-shadow:inset 0 0 40px rgba(0,170,255,.06)}
+.gauge{height:6px;background:#0a1220;border:1px solid #1a2a40;border-radius:999px;overflow:hidden;margin-top:10px}
+.gauge > i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok),var(--accent));box-shadow:0 0 10px rgba(0,170,255,.4);transition:width .5s}
+.compare-toggle{display:flex;align-items:center;gap:8px;margin-top:8px}
+.switch{position:relative;width:44px;height:26px;background:#0a1220;border:1px solid #1b2a42;border-radius:999px;cursor:pointer}
+.switch i{position:absolute;top:2px;left:2px;width:20px;height:20px;background:#9fb3cc;border-radius:50%;transition:.2s}
+.switch.active{background:#0f2a48;border-color:#1e4976}
+.switch.active i{left:20px;background:#e6f7ff;box-shadow:var(--glow)}
+.tri-only{display:none}
+body.is-triple .tri-only{display:block}
+.note{padding:12px 14px;background:#07111f;border:1px dashed #1b3352;color:#a9bed7;border-radius:12px;font-size:12px}
+.footer-actions{display:flex;gap:10px;flex-wrap:wrap;padding:14px 16px;border-top:1px solid var(--line);background:linear-gradient(0deg, rgba(255,255,255,.02), transparent)}
+.kbd{padding:2px 6px;border:1px solid #2a3b55;background:#0a1220;border-radius:6px;font-size:11px;color:#9fb3cc}
+.faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px; margin-top:10px}
+@media (max-width:900px){.faq-grid{grid-template-columns:1fr}}
+details{background:var(--panel-solid);border:1px solid var(--line);border-radius:14px;padding:14px}
+details + details{margin-top:10px}
+summary{cursor:pointer;font-weight:600;color:#d1e3f5;list-style:none}
+summary::-webkit-details-marker{display:none}
+details p{color:#a6b8d1;line-height:1.6;margin:10px 0 0}
+.toast{position:fixed;right:18px;bottom:18px;background:#0b1a2c;border:1px solid #1c3a5e;padding:10px 14px;border-radius:12px;opacity:0;transform:translateY(10px);transition:.3s;z-index:99}
+.toast.show{opacity:1;transform:translateY(0)}
+.divider{height:1px;background:linear-gradient(90deg,transparent,#1a2a40,transparent);margin:14px 0}
+.watermark{position:absolute;right:10px;bottom:8px;font-size:10px;color:#35506f;letter-spacing:.2em;text-transform:uppercase}
+
+/* PRO MAX GUIDE STYLES */
+.guide-content{max-width:980px;margin:0 auto}
+.guide-content h1{font-size:28px;margin:10px 0 20px;color:#e6f3ff;letter-spacing:.01em;border-left:4px solid var(--accent);padding-left:14px}
+.guide-content h2{font-size:22px;margin:36px 0 14px;color:#e6f3ff; border-bottom: 1px solid var(--line); padding-bottom: 8px;}
+.guide-content h3{font-size:18px;color:#9fb3cc;margin:22px 0 8px;text-transform:uppercase;letter-spacing:.05em}
+.guide-content p{color:#b8c7dc;line-height:1.85;margin:0 0 14px;font-size:15.5px}
+.guide-content ul{color:#a6b8d1;line-height:1.75;margin:10px 0 16px;padding-left:20px}
+.guide-content li{margin:7px 0}
+.guide-content strong{color:#e6f7ff;font-weight:700}
+.guide-content .callout{background:#0a1422;border:1px solid #1b3352;border-left:3px solid var(--accent);padding:14px 16px;border-radius:10px;margin:18px 0;color:#cfe6ff}
+
+/* HYBRID AFFILIATE AD BANNER STYLE */
+.affiliate-slot {
+  background: linear-gradient(135deg, #0f1c2e, #070d16);
+  border: 1px solid #1a3252;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 24px 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+@media (max-width: 600px) {
+  .affiliate-slot { flex-direction: column; text-align: center; }
+}
+.affiliate-img {
+  width: 120px;
+  height: auto;
+  border-radius: 8px;
+  background: #fff;
+  padding: 4px;
+}
+.affiliate-content-wrapper { flex: 1; }
+.affiliate-slot span { display: block; font-size: 11px; color: #7e8da6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.affiliate-slot .ad-content { color: #d9e6f2; font-size: 15px; margin-bottom: 12px; line-height: 1.4; }
+.affiliate-btn {
+  display: inline-block; padding: 10px 20px; background: #ff9900; color: #111;
+  text-decoration: none; font-weight: bold; border-radius: 8px; transition: 0.2s; font-size: 14px;
+}
+.affiliate-btn:hover { background: #e68a00; transform: translateY(-2px); }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<header>
+  <div class="nav">
+    <div class="logo">
+      <div class="logo-badge">FL</div>
+      <span>ACC <span style="color:var(--accent)">FOV LAB</span></span>
+    </div>
+    <div class="badge"><span class="dot"></span> Real-time hFOV engine • bezel-correct • triple-aware</div>
+  </div>
+</header>
+
+<div class="game-nav-wrapper">
+  <nav class="game-nav">
+    <a href="index.html" class="nav-pill">Main Calculator</a>
+    <a href="iracing-fov-calculator.html" class="nav-pill">iRacing</a>
+    <a href="assetto-corsa-fov-calculator.html" class="nav-pill">Assetto Corsa</a>
+    <a href="acc-fov-calculator.html" class="nav-pill active">ACC</a>
+    <a href="lmu-fov-calculator.html" class="nav-pill">Le Mans Ultimate</a>
+    <a href="gt7-fov-calculator.html" class="nav-pill">Gran Turismo 7</a>
+    <a href="forza-fov-calculator.html" class="nav-pill">Forza Motorsport</a>
+    <a href="triple-screen-fov-calculator.html" class="nav-pill">Triple Screen Setup</a>
+    <a href="ultrawide-fov-calculator.html" class="nav-pill">Ultrawide (3440x1440)</a>
+    <a href="samsung-g9-fov-calculator.html" class="nav-pill">Samsung G9 Setup</a>
+  </nav>
+</div>
+
+<div class="container">
+  <h1 style="margin:0 0 18px;font-size:28px;letter-spacing:.02em;color:#e6f3ff">ACC FOV Calculator — Perfect Field of View for Assetto Corsa Competizione</h1>
+  <div class="app-grid">
+    <section class="panel">
+      <div class="panel-header"><h2>Display Setup</h2></div>
+      <div class="panel-body">
+        <div class="section">
+          <div class="row">
+            <div class="field">
+              <div class="label"><span>Screen Size (diagonal)</span><span id="sizeOut" class="kbd">32.0"</span></div>
+              <input id="size" class="slider" type="range" min="21" max="65" step="0.5" value="32">
+            </div>
+            <div class="field">
+              <div class="label"><span>Aspect Ratio</span></div>
+              <select id="aspect">
+                <option value="16:9" selected>16:9 — Standard</option>
+                <option value="21:9">21:9 — Ultrawide</option>
+                <option value="32:9">32:9 — Super Ultrawide</option>
+                <option value="16:10">16:10</option>
+                <option value="4:3">4:3</option>
+                <option value="custom">Custom…</option>
+              </select>
+            </div>
+          </div>
+          <div class="row" id="customAspect" style="display:none">
+            <div class="field"><div class="label"><span>Custom W</span></div><input id="arW" class="input" type="number" value="16" min="1"></div>
+            <div class="field"><div class="label"><span>Custom H</span></div><input id="arH" class="input" type="number" value="9" min="1"></div>
+          </div>
+          <div class="preset-bar">
+            <button class="chip" data-preset="g9">Samsung G9 (49" 32:9 1000R)</button>
+            <button class="chip" data-preset="aw3423">AW3423DW (34" 21:9 1800R)</button>
+            <button class="chip" data-preset="triple27">Triple 27" 16:9</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="row">
+            <div class="field">
+              <div class="label"><span>Eye Distance</span></div>
+              <div class="with-unit">
+                <input id="distance" class="input" type="number" value="70" min="30" max="150" step="0.5">
+                <button id="unitCm" class="unit-toggle active">cm</button>
+                <button id="unitIn" class="unit-toggle">in</button>
+              </div>
+              <div class="hint">Measure from eyes to screen center</div>
+            </div>
+            <div class="field">
+              <div class="label"><span>Monitors</span></div>
+              <div class="seg" id="monitors">
+                <button data-m="1" class="active">Single</button>
+                <button data-m="3">Triple</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <div class="label"><span>Curve Radius</span></div>
+              <select id="curve">
+                <option value="0">Flat</option>
+                <option value="1000">1000R</option>
+                <option value="1500">1500R</option>
+                <option value="1800" selected>1800R</option>
+                <option value="2300">2300R</option>
+                <option value="3000">3000R</option>
+                <option value="3800">3800R</option>
+              </select>
+              <div class="hint tri-only">Curvature ignored for triples</div>
+            </div>
+            <div class="field tri-only">
+              <div class="label"><span>Side Angle</span><span id="angleOut" class="kbd">50°</span></div>
+              <input id="angle" class="slider" type="range" min="30" max="70" step="1" value="50">
+            </div>
+          </div>
+
+          <div class="row tri-only">
+            <div class="field">
+              <div class="label"><span>Bezel Thickness</span><span class="kbd">per side</span></div>
+              <input id="bezel" class="input" type="number" value="8" min="0" max="30" step="0.5">
+              <div class="hint">Enter visible frame width in mm</div>
+            </div>
+            <div class="field">
+              <div class="label"><span>Bezel-Corrected Gap</span></div>
+              <input id="bezelOut" class="input" disabled>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="row">
+            <div class="field">
+              <div class="label"><span>Game Preset</span></div>
+              <select id="game">
+                <option value="iracing">iRacing</option>
+                <option value="ac">Assetto Corsa</option>
+                <option value="acc" selected>Assetto Corsa Competizione</option>
+                <option value="ams2">Automobilista 2</option>
+                <option value="lmu">Le Mans Ultimate</option>
+                <option value="gt7">Gran Turismo 7</option>
+                <option value="forza">Forza Motorsport</option>
+                <option value="f1">F1 23/24/25</option>
+              </select>
+              <div class="hint" id="gameHint">ACC uses horizontal FOV</div>
+            </div>
+            <div class="field">
+              <div class="label"><span>Compare vs “Typical”</span></div>
+              <div class="compare-toggle">
+                <div id="compareSwitch" class="switch"><i></i></div>
+                <span style="font-size:12px;color:#9fb3cc">Show wrong 90°/150° FOV</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="saveBtn">💾 Save Profile</button>
+          <button class="btn" id="resetBtn">↺ Reset</button>
+          <button class="btn" id="exportBtn">🖼️ Export PNG</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header"><h2>Top-Down Visualizer — Real FOV Cone</h2></div>
+      <div class="canvas-wrap">
+        <canvas id="fovCanvas" width="1200" height="520"></canvas>
+        <div class="canvas-overlay">
+          <span class="pill" id="pillMonitors">Single 32" 16:9</span>
+          <span class="pill" id="pillDist">70 cm</span>
+          <span class="pill" id="pillCurve">1800R</span>
+        </div>
+        <div class="watermark">ACC FOV LAB</div>
+      </div>
+      <div class="results">
+        <div class="stat accent">
+          <h3>Horizontal FOV</h3>
+          <div class="value" id="hFOV">—</div>
+          <div class="sub">Total rendered width</div>
+        </div>
+        <div class="stat">
+          <h3>Vertical FOV</h3>
+          <div class="value" id="vFOV">—</div>
+          <div class="sub">2·atan(h/2d)</div>
+        </div>
+        <div class="stat accent">
+          <h3 id="gameLabel">ACC</h3>
+          <div class="value" id="gameSetting">—</div>
+          <div class="sub" id="gameSub">Set in-game hFOV</div>
+        </div>
+        <div class="stat">
+          <h3>Immersion Score</h3>
+          <div class="value" id="immersion">—</div>
+          <div class="gauge"><i id="immersionFill"></i></div>
+          <div class="sub" id="immersionText">Calculating…</div>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <div class="note" style="flex:1">
+          <strong>ACC Pro Tip:</strong> Assetto Corsa Competizione uses <strong>Horizontal FOV</strong>. Ensure you set this exact hFOV value in the in-game View Settings, and use the seat position controls to adjust your view of the dashboard.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="affiliate-slot">
+    <img src="https://m.media-amazon.com/images/I/71XmQWlI1VL._AC_SX679_.jpg" alt="Curved Ultrawide Monitor" class="affiliate-img">
+    <div class="affiliate-content-wrapper">
+      <span>Recommended Upgrade for ACC</span>
+      <div class="ad-content">
+        <strong>Need wider horizontal vision?</strong> A 34-inch 21:9 curved ultrawide monitor is the sweet spot for ACC, giving you ~80°+ hFOV without the complexity of a triple screen setup.
+      </div>
+      <a href="#" class="affiliate-btn" target="_blank" rel="nofollow sponsored">Check Price on Amazon</a>
+    </div>
+  </div>
+
+  <section class="panel guide">
+    <div class="panel-body guide-content">
+      <h2>The Definitive ACC FOV Guide 2026</h2>
+      <p>Welcome to the <strong>ACC FOV Calculator</strong> — the most accurate <strong>sim racing fov calculator acc</strong> for Assetto Corsa Competizione. If you've searched for <strong>acc fov calculator</strong>, <strong>sim racing fov calculator acc</strong>, or <strong>assetto corsa competizione fov</strong> settings, this tool ends the guesswork. Unlike generic spreadsheets, this <strong>modern fov calculator</strong> combines live trigonometry, curve correction, bezel math, and a real-time visualizer built specifically for ACC's Unreal Engine 4 renderer.</p>
+
+      <h2 id="what-is">Why ACC FOV is Different</h2>
+      <p>Assetto Corsa Competizione does NOT use vertical FOV like the original Assetto Corsa. ACC uses <strong>horizontal FOV (hFOV)</strong>, measured across the width of your monitor at the center. If you copy a 30° vFOV value from AC into ACC, you'll get a tunnel-vision 50° hFOV and wonder why you can't see apexes.</p>
+      <p>This <strong>acc fov calculator</strong> solves it: we compute the exact hFOV from your screen width and eye distance. Most drivers run ACC at the default 70° hFOV, which is often 15-30° too narrow on ultrawides and 20° too wide on singles. The result? Distances compress, curbs look closer, and you brake early at Monza T1. Using a proper <strong>assetto corsa competizione fov</strong> value restores 1:1 scale, and your consistency improves within two sessions.</p>
+      <div class="callout">Bottom line for ACC: correct hFOV = real-world scale. It's not a preference slider — it's optics. Use this <strong>acc fov calculator</strong> once, lock it, and adjust seat position instead.</div>
+
+      <h2 id="how-to-use">How to Use This Sim Racing FOV Calculator ACC</h2>
+      <ul>
+        <li><strong>1. Measure eye distance:</strong> Sit in race position. Measure from your cornea to the center of the screen. The calculator handles <strong>cm to inches</strong> conversions automatically.</li>
+        <li><strong>2. Enter screen specs:</strong> Set diagonal and aspect. For 34" ultrawide choose 21:9, for G9 choose 32:9. Select curve radius to account for edge proximity.</li>
+        <li><strong>3. Pick Single or Triple:</strong> Our <strong>sim racing triple screen fov calculator</strong> mode unlocks side angle and bezel thickness.</li>
+        <li><strong>4. Set in ACC:</strong> Options > View Settings > FOV. Slide to the value from the <strong>acc fov calculator</strong>.</li>
+      </ul>
+
+      <div class="affiliate-slot">
+        <img src="https://m.media-amazon.com/images/I/71Y1Rd-mQpL._AC_SX679_.jpg" alt="Triple Monitor Stand" class="affiliate-img">
+        <div class="affiliate-content-wrapper">
+          <span>Upgrade Your ACC Triple Setup</span>
+          <div class="ad-content">
+            <strong>Running Triple Screens?</strong> ACC's native triple rendering requires exact angles. A dedicated freestanding triple monitor stand lets you perfectly dial in that 55-60° side angle for seamless immersion.
+          </div>
+          <a href="#" class="affiliate-btn" target="_blank" rel="nofollow sponsored">Shop Monitor Stands on Amazon</a>
+        </div>
+      </div>
+
+      <h2 id="triples">ACC Triple Screen Setup — Full Guide</h2>
+      <p>ACC has excellent triple support because Unreal Engine renders three independent view frustums. This <strong>sim racing triple screen fov calculator</strong> is built for it.</p>
+      <p><strong>Step 1 — Enable triples in ACC:</strong> Options > Video > check "Triple Screen." Restart the game.</p>
+      <p><strong>Step 2 — Copy numbers from the acc fov calculator:</strong> Enter your monitor size, angle (50-65°), and bezel thickness. The calculator outputs total hFOV and per-screen hFOV.</p>
+      <p><strong>Step 3 — Set ACC triple values:</strong> In View Settings with Triple enabled, set your measured Distance, Screen Width (in mm), Bezel Gap (in mm), and side angle.</p>
+      <p>ACC will auto-calculate the hFOV based on these measurements. It should closely match the output from the <strong>sim racing fov calculator acc</strong>.</p>
+
+      <h2 id="faq">FAQ — Essential Questions</h2>
+      <div class="faq-grid" style="margin-top:10px">
+        <details open>
+          <summary>1. Why is ACC FOV different from Assetto Corsa?</summary>
+          <p>Assetto Corsa Competizione uses horizontal FOV (hFOV), unlike the original Assetto Corsa which uses vertical FOV (vFOV). Using a vFOV number in ACC will result in a severely zoomed-in view.</p>
+        </details>
+        <details>
+          <summary>2. How do I set up a Samsung Odyssey G9 for ACC?</summary>
+          <p>ACC treats the G9 as a single ultrawide screen. Set the calculator to Single monitor, 32:9 aspect ratio, and 1000R curve. The resulting hFOV (typically around 101-104 degrees) should be entered in the ACC View Settings.</p>
+        </details>
+        <details>
+          <summary>3. Does curve radius matter in ACC?</summary>
+          <p>Yes. A 1000R curve on a wide monitor brings the edges closer to your eyes, slightly increasing your effective FOV. Our calculator dynamically adjusts for this curve.</p>
+        </details>
+        <details>
+          <summary>4. Should I change FOV to see the mirrors better?</summary>
+          <p>No. Increasing FOV distorts the track scale. Instead, adjust the in-game seat position backwards or adjust the virtual mirror settings.</p>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast">Profile saved</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const size = $('size'), sizeOut = $('sizeOut'), aspect = $('aspect'), arW = $('arW'), arH = $('arH'), customAspect = $('customAspect');
+  const distance = $('distance'), unitCm = $('unitCm'), unitIn = $('unitIn');
+  const monitorsSeg = $('monitors'), angle = $('angle'), angleOut = $('angleOut');
+  const bezel = $('bezel'), bezelOut = $('bezelOut'), curve = $('curve');
+  const game = $('game'), gameHint = $('gameHint');
+  const hFOVel = $('hFOV'), vFOVel = $('vFOV'), gameSetting = $('gameSetting'), gameLabel = $('gameLabel'), gameSub = $('gameSub');
+  const immersion = $('immersion'), immersionFill = $('immersionFill'), immersionText = $('immersionText');
+  const pillMonitors = $('pillMonitors'), pillDist = $('pillDist'), pillCurve = $('pillCurve');
+  const compareSwitch = $('compareSwitch');
+  const canvas = $('fovCanvas'), ctx = canvas.getContext('2d');
+
+  const games = {
+    iracing:{label:'iRacing', type:'hFOV', hint:'Uses horizontal FOV. For triples set width/distance/angle.'},
+    ac:{label:'Assetto Corsa', type:'vFOV', hint:'AC uses vertical FOV'},
+    acc:{label:'Assetto Corsa Competizione', type:'hFOV', hint:'ACC uses horizontal FOV'},
+    ams2:{label:'Automobilista 2', type:'vFOV', hint:'AMS2 uses vertical FOV'},
+    lmu:{label:'Le Mans Ultimate', type:'vFOV', hint:'LMU (rF2) uses vertical FOV'},
+    gt7:{label:'Gran Turismo 7', type:'hFOV', hint:'GT7 camera FOV is horizontal'},
+    forza:{label:'Forza Motorsport', type:'hFOV', hint:'Forza uses horizontal FOV'},
+    f1:{label:'F1 23/24/25', type:'hFOV', hint:'F1 uses offset; use as baseline'}
+  };
+
+  let state = {
+    size:32, aspect:'16:9', arW:16, arH:9, dist:70, unit:'cm',
+    monitors:1, angle:50, bezel:8, curve:1800, game:'acc', compare:false
+  };
+
+  function mm(val){ return state.unit==='cm' ? val*10 : val*25.4; }
+  function toDisplay(mmVal){ return state.unit==='cm' ? (mmVal/10).toFixed(1) : (mmVal/25.4).toFixed(1); }
+
+  function getAspectWH(){
+    if(state.aspect==='custom') return {w: +arW.value||16, h:+arH.value||9};
+    const [w,h]=state.aspect.split(':').map(Number); return {w,h};
+  }
+  function calcScreen(){
+    const diagIn = state.size;
+    const diagMm = diagIn*25.4;
+    const {w,h}=getAspectWH();
+    const diag = Math.hypot(w,h);
+    const width = diagMm * w/diag;
+    const height = diagMm * h/diag;
+    return {width,height,diagMm};
+  }
+
+  function deg(r){return r*180/Math.PI}
+  function rad(d){return d*Math.PI/180}
+
+  function calculate(){
+    const {width:W, height:H} = calcScreen();
+    const D = mm(state.dist);
+    const R = +state.curve;
+    const monitors = state.monitors;
+    const angleR = rad(state.angle);
+    const bezelMm = +state.bezel;
+
+    let hFOV, vFOV, leftX, rightX, leftY, rightY, singleHFOV;
+
+    vFOV = 2*Math.atan((H/2)/D);
+
+    if(monitors===1){
+      let delta=0;
+      if(R>0 && W/2 < R){
+        delta = R - Math.sqrt(R*R - (W/2)*(W/2));
+      }
+      const De = Math.max(5, D - delta);
+      hFOV = 2*Math.atan((W/2)/De);
+      leftX = -W/2; rightX = W/2; leftY = rightY = De;
+      singleHFOV = hFOV;
+    }else{
+      const gap = bezelMm; 
+      const xInnerL = -W/2 - gap;
+      const xOuterL = xInnerL - W*Math.cos(angleR);
+      const yOuterL = D - W*Math.sin(angleR);
+      const num = Math.abs(xOuterL);
+      const den = Math.max(10, yOuterL);
+      const half = Math.atan(num/den);
+      hFOV = 2*half;
+      leftX = xOuterL; leftY = yOuterL; rightX = -xOuterL; rightY = yOuterL;
+      singleHFOV = 2*Math.atan((W/2)/D);
+      bezelOut.value = `${(gap*2).toFixed(1)} mm total gap`;
+    }
+
+    const hDeg = deg(hFOV), vDeg = deg(vFOV);
+    const g = games[state.game];
+    const gameVal = g.type==='hFOV' ? hDeg : vDeg;
+
+    hFOVel.textContent = hDeg.toFixed(1)+'°';
+    vFOVel.textContent = vDeg.toFixed(1)+'°';
+    gameLabel.textContent = g.label;
+    gameSetting.textContent = gameVal.toFixed(1)+'°';
+    gameSub.textContent = g.type==='hFOV' ? 'Set in-game hFOV' : 'Set in-game vFOV';
+    gameHint.textContent = g.hint;
+
+    const base = Math.min(1, hDeg/180);
+    const mult = monitors===3 ? 1.15 : 1;
+    const score = Math.round(Math.min(100, base*100*mult));
+    immersion.textContent = score;
+    immersionFill.style.width = score+'%';
+    immersionText.textContent = score<40?'Tunnel vision':score<60?'Narrow':score<80?'Good':score<95?'Great':'Full surround';
+
+    pillMonitors.textContent = `${monitors===1?'Single':'Triple'} ${state.size}" ${state.aspect}`;
+    pillDist.textContent = `${state.dist} ${state.unit}`;
+    pillCurve.textContent = monitors===1 ? (R?`${R}R`:'Flat') : `${state.angle}° angle`;
+
+    draw(W,H,D,R,leftX,leftY,rightX,rightY,monitors,angleR,bezelMm,hFOV,vFOV,singleHFOV);
+  }
+
+  function fitCanvas(){
+    const dpr = Math.max(1, window.devicePixelRatio||1);
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function draw(W,H,D,R,leftX,leftY,rightX,rightY,monitors,angleR,bezelMm,hFOV,vFOV,singleHFOV){
+    fitCanvas();
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    ctx.clearRect(0,0,w,h);
+
+    ctx.save(); ctx.globalAlpha=.07; ctx.strokeStyle='#2a4060'; ctx.lineWidth=1;
+    for(let x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+    for(let y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+    ctx.restore();
+
+    const eyeX = w/2, eyeY = h-70;
+    const spanMm = Math.max(W*1.2, Math.abs(rightX-leftX)*1.15);
+    const scale = (w*0.85)/spanMm;
+    const toScreen = (xMm,yMm) => [eyeX + xMm*scale, eyeY - yMm*scale];
+
+    const [lx,ly]=toScreen(leftX,leftY);
+    const [rx,ry]=toScreen(rightX,rightY);
+    ctx.save();
+    const grad = ctx.createLinearGradient(eyeX,eyeY,eyeX,ly);
+    grad.addColorStop(0,'rgba(0,170,255,0.28)'); grad.addColorStop(1,'rgba(0,170,255,0.05)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.moveTo(eyeX,eyeY); ctx.lineTo(lx,ly); ctx.lineTo(rx,ry); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(0,230,255,.7)'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(eyeX,eyeY); ctx.lineTo(lx,ly); ctx.moveTo(eyeX,eyeY); ctx.lineTo(rx,ry); ctx.stroke();
+    ctx.restore();
+
+    if(state.compare){
+      const wrongDeg = monitors===1? 68 : 145; 
+      const wrongR = rad(wrongDeg/2);
+      const wy = D;
+      const wx = Math.tan(wrongR)*wy;
+      const [wlx,wly]=toScreen(-wx,wy);
+      const [wrx,wry]=toScreen(wx,wy);
+      ctx.save();
+      ctx.fillStyle='rgba(239,68,68,0.14)'; ctx.strokeStyle='rgba(239,68,68,0.7)'; ctx.setLineDash([6,6]); ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(eyeX,eyeY); ctx.lineTo(wlx,wly); ctx.lineTo(wrx,wry); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+      ctx.setLineDash([]);
+    }
+
+    ctx.save(); ctx.lineWidth=3; ctx.strokeStyle='#00aaff'; ctx.shadowColor='rgba(0,170,255,.5)'; ctx.shadowBlur=12;
+    if(monitors===1){
+      const [cx,cy]=toScreen(0,D);
+      if(R>0 && W/2 < R){
+        const alpha = Math.asin((W/2)/R);
+        const ccY = eyeY - (D - R)*scale;
+        ctx.beginPath(); ctx.arc(eyeX, ccY, R*scale, Math.PI/2+alpha, Math.PI/2-alpha, true); ctx.stroke();
+      }else{
+        const [x1,y1]=toScreen(-W/2,D); const [x2,y2]=toScreen(W/2,D);
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      }
+      ctx.strokeStyle='#7dd3fc'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(cx,cy-8); ctx.lineTo(cx,cy+8); ctx.stroke();
+    }else{
+      const [c1x,c1y]=toScreen(-W/2,D); const [c2x,c2y]=toScreen(W/2,D);
+      ctx.beginPath(); ctx.moveTo(c1x,c1y); ctx.lineTo(c2x,c2y); ctx.stroke();
+      const xInnerL = -W/2 - bezelMm, yInner=D;
+      const xOuterL = xInnerL - W*Math.cos(angleR), yOuterL = D - W*Math.sin(angleR);
+      const [l1x,l1y]=toScreen(xInnerL,yInner), [l2x,l2y]=toScreen(xOuterL,yOuterL);
+      ctx.beginPath(); ctx.moveTo(l1x,l1y); ctx.lineTo(l2x,l2y); ctx.stroke();
+      const xInnerR = W/2 + bezelMm;
+      const xOuterR = xInnerR + W*Math.cos(angleR), yOuterR2 = D - W*Math.sin(angleR);
+      const [r1x,r1y]=toScreen(xInnerR,yInner), [r2x,r2y]=toScreen(xOuterR,yOuterR2);
+      ctx.beginPath(); ctx.moveTo(r1x,r1y); ctx.lineTo(r2x,r2y); ctx.stroke();
+
+      ctx.shadowBlur=0; ctx.strokeStyle='rgba(255,255,255,.15)'; ctx.lineWidth=8; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(c1x,c1y); ctx.lineTo(l1x,l1y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(c2x,c2y); ctx.lineTo(r1x,r1y); ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle='#0b1b2e'; ctx.strokeStyle='#1e4976'; ctx.lineWidth=2; ctx.shadowColor='rgba(0,0,0,.6)'; ctx.shadowBlur=10;
+    ctx.beginPath(); ctx.arc(eyeX,eyeY,18,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#7dd3fc'; ctx.beginPath(); ctx.arc(eyeX-6,eyeY-2,2.5,0,7); ctx.arc(eyeX+6,eyeY-2,2.5,0,7); ctx.fill();
+    ctx.strokeStyle='#3b82f6'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(eyeX,eyeY-12); ctx.lineTo(eyeX,eyeY-28); ctx.stroke();
+    ctx.restore();
+
+    ctx.save(); ctx.fillStyle='#9fb3cc'; ctx.font='12px system-ui'; ctx.textAlign='center';
+    const [midX,midY]=toScreen(0, D/2);
+    ctx.fillText(`${toDisplay(D)} ${state.unit}`, eyeX, midY);
+    ctx.restore();
+
+    ctx.save(); ctx.strokeStyle='rgba(125,211,252,.8)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(eyeX,eyeY,50,-Math.atan2(leftX,leftY)-Math.PI/2, -Math.atan2(rightX,rightY)-Math.PI/2); ctx.stroke();
+    ctx.fillStyle='#cfe8ff'; ctx.font='12px system-ui'; ctx.textAlign='center';
+    ctx.fillText(`${deg(hFOV).toFixed(1)}°`, eyeX, eyeY-58);
+    ctx.restore();
+  }
+
+  function sync(){
+    sizeOut.textContent = (+size.value).toFixed(1)+'"';
+    angleOut.textContent = angle.value+'°';
+    document.body.classList.toggle('is-triple', state.monitors===3);
+  }
+
+  size.addEventListener('input', e=>{state.size=+e.target.value; sync(); calculate()});
+  aspect.addEventListener('change', e=>{state.aspect=e.target.value; customAspect.style.display = state.aspect==='custom'?'grid':'none'; calculate()});
+  arW.addEventListener('input', calculate); arH.addEventListener('input', calculate);
+  distance.addEventListener('input', e=>{state.dist=+e.target.value||0; calculate()});
+  unitCm.onclick=()=>{if(state.unit!=='cm'){state.unit='cm'; unitCm.classList.add('active'); unitIn.classList.remove('active'); state.dist = +(state.dist*2.54).toFixed(1); distance.value=state.dist; calculate()}};
+  unitIn.onclick=()=>{if(state.unit!=='in'){state.unit='in'; unitIn.classList.add('active'); unitCm.classList.remove('active'); state.dist = +(state.dist/2.54).toFixed(1); distance.value=state.dist; calculate()}};
+  monitorsSeg.querySelectorAll('button').forEach(b=>b.onclick=()=>{monitorsSeg.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); state.monitors=+b.dataset.m; sync(); calculate()});
+  angle.addEventListener('input', e=>{state.angle=+e.target.value; sync(); calculate()});
+  bezel.addEventListener('input', e=>{state.bezel=+e.target.value||0; calculate()});
+  curve.addEventListener('change', e=>{state.curve=+e.target.value; calculate()});
+  game.addEventListener('change', e=>{state.game=e.target.value; calculate()});
+  compareSwitch.onclick=()=>{state.compare=!state.compare; compareSwitch.classList.toggle('active',state.compare); calculate()};
+
+  document.querySelectorAll('[data-preset]').forEach(b=>{
+    b.onclick=()=>{
+      const p=b.dataset.preset;
+      if(p==='g9'){ state.size=49; size.value=49; state.aspect='32:9'; aspect.value='32:9'; state.curve=1000; curve.value='1000'; state.monitors=1; }
+      if(p==='aw3423'){ state.size=34; size.value=34; state.aspect='21:9'; aspect.value='21:9'; state.curve=1800; curve.value='1800'; state.monitors=1; }
+      if(p==='triple27'){ state.size=27; size.value=27; state.aspect='16:9'; aspect.value='16:9'; state.curve=0; curve.value='0'; state.monitors=3; monitorsSeg.querySelectorAll('button').forEach(x=>x.classList.toggle('active', +x.dataset.m===3)); }
+      sync(); calculate();
+    }
+  });
+
+  $('saveBtn').onclick=()=>{
+    localStorage.setItem('fovlab_pro', JSON.stringify(state));
+    toast('Profile saved');
+  };
+  $('resetBtn').onclick=()=>{
+    localStorage.removeItem('fovlab_pro');
+    location.reload();
+  };
+  $('exportBtn').onclick=()=>{
+    const a=document.createElement('a');
+    a.download=`fovlab-${state.monitors}x${state.size}-${state.aspect}.png`;
+    a.href=canvas.toDataURL('image/png'); a.click();
+  };
+
+  function toast(msg){
+    const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600);
+  }
+
+  function load(){
+    const saved = localStorage.getItem('fovlab_pro');
+    if(saved){ try{ state={...state, ...JSON.parse(saved)} }catch{} }
+    // FORCE ACC preset for this specific page on load
+    state.game = 'acc';
+    size.value=state.size; aspect.value=state.aspect; distance.value=state.dist; angle.value=state.angle; bezel.value=state.bezel; curve.value=String(state.curve); game.value=state.game;
+    unitCm.classList.toggle('active', state.unit==='cm'); unitIn.classList.toggle('active', state.unit==='in');
+    monitorsSeg.querySelectorAll('button').forEach(x=>x.classList.toggle('active', +x.dataset.m===state.monitors));
+    customAspect.style.display = state.aspect==='custom'?'grid':'none';
+    sync(); calculate();
+  }
+  window.addEventListener('resize', ()=>{calculate()});
+  load();
+})();
+</script>
+</body>
+</html>
